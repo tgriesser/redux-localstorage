@@ -1,21 +1,28 @@
-/**
- * Middleware for intercepting and queue'ing actions until an action.meta.BUFFER_BUSTER action
- * has been dispatched. This action will be dispatched first, followed by the queued actions in
- * the order they were originally dispatched.
+import actionTypes from './actionTypes.js';
+
+/*
+ * Middleware for intercepting and queueing actions until actionTypes.INIT
+ * has been dispatched. This action will be dispatched first, followed by
+ * any queued actions in the order they were originally dispatched.
  */
 export default function bufferActions() {
-  let buffer = true
-  let queue = []
+  let buffer = true;
+  let queue = [];
 
   return next => action => {
-    if (!buffer) return next(action)
+    if (!buffer) return next(action);
 
-    if (action.meta && action.meta.BUFFER_BUSTER) {
-      buffer = false
-      next(action)
-      queue.forEach((queuedAction) => next(queuedAction))
+    if (action.type === actionTypes.INIT) {
+      buffer = false;
+      next(action);
+      queue.forEach(queuedAction => {
+        next(queuedAction);
+      });
+      queue = null;
     } else {
-      queue.push(action)
+      queue.push(action);
     }
-  }
+
+    return action;
+  };
 }
